@@ -36,12 +36,7 @@ A Model Context Protocol (MCP) server that enables Claude Desktop to interact wi
 
 ### Installation
 
-1. **Install the package globally:**
-   ```bash
-   npm i -g ./webdriverio-mcp.tgz
-   ```
-
-2. **Configure Claude Desktop:**
+1. **Configure Claude Desktop:**
    Add the following configuration to your Claude Desktop MCP settings:
    ```json
    {
@@ -56,7 +51,7 @@ A Model Context Protocol (MCP) server that enables Claude Desktop to interact wi
    ```
    📖 **Need help with MCP configuration?** Read the [official MCP configuration guide](https://modelcontextprotocol.io/quickstart/user)
 
-3. **Restart Claude Desktop:**
+2. **Restart Claude Desktop:**
    ⚠️ **Important:** You may need to fully restart Claude Desktop. On Windows, use Task Manager to ensure it's completely closed before restarting.
 
 ## Usage Examples

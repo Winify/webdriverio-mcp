@@ -12,7 +12,7 @@
         "webdriverio": "9.15"
       },
       "bin": {
-        "mcp-webdriverio": "build/index.js"
+        "webdriverio-mcp": "lib/server.js"
       },
       "devDependencies": {
         "@types/node": "^20.11.0",
