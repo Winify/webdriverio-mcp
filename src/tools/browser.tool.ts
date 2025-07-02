@@ -5,8 +5,8 @@ import {z} from 'zod';
 
 export const startBrowserToolArguments = {
   headless: z.boolean().optional(),
-  windowWidth: z.number().min(800).max(3840).optional(),
-  windowHeight: z.number().min(600).max(2160).optional(),
+  windowWidth: z.number().min(400).max(3840).optional(),
+  windowHeight: z.number().min(400).max(2160).optional(),
 };
 
 const state: { browsers: Map<string, WebdriverIO.Browser>, currentSession: string | null } = {

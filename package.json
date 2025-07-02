@@ -1,6 +1,10 @@
 {
   "name": "webdriverio-mcp",
-  "version": "1.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Winify/webdriverio-mcp.git"
+  },
+  "version": "1.0.2",
   "description": "MCP server with WebdriverIO for browser automation",
   "main": "./lib/server.js",
   "module": "./lib/server.js",
