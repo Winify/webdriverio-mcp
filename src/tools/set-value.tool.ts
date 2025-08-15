@@ -21,7 +21,7 @@ export const setValueTool: ToolCallback = async ({selector, value, scrollToView 
     const browser = getBrowser();
     await browser.waitUntil(browser.$(selector).isExisting, {timeout});
     if (scrollToView) {
-      await browser.$(selector).scrollIntoView();
+      await browser.$(selector).scrollIntoView({ block: 'center', inline: 'center' });
     }
     await browser.$(selector).clearValue();
     await browser.$(selector).setValue(value);

@@ -16,7 +16,7 @@ const clickAction = async (selector: string, timeout: number, scrollToView = tru
     const browser = getBrowser();
     await browser.waitUntil(browser.$(selector).isExisting, {timeout});
     if (scrollToView) {
-      await browser.$(selector).scrollIntoView();
+      await browser.$(selector).scrollIntoView({ block: 'center', inline: 'center' });
     }
     await browser.$(selector).click();
     return {

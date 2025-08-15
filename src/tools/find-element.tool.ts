@@ -1,7 +1,6 @@
 import {getBrowser} from './browser.tool';
 import {z} from 'zod';
 import {ToolCallback} from '@modelcontextprotocol/sdk/server/mcp';
-import {ToolAnnotations} from '@modelcontextprotocol/sdk/types';
 
 const defaultTimeout: number = 3000;
 
