@@ -13,6 +13,8 @@ import {scrollDownTool, scrollDownToolArguments} from './tools/scroll-down.tool'
 import {scrollUpTool, scrollUpToolArguments} from './tools/scroll-up.tool';
 import {getVisibleElementsTool} from './tools/get-visible-elements.tool';
 import {takeScreenshotTool, takeScreenshotToolArguments} from './tools/take-screenshot.tool';
+import {getCookiesTool, getCookiesToolArguments, setCookieTool, setCookieToolArguments, deleteCookiesTool, deleteCookiesToolArguments} from './tools/cookies.tool';
+import {getAccessibilityTreeTool} from './tools/get-accessibility-tree.tool';
 
 // IMPORTANT: Redirect all console output to stderr to avoid messing with MCP protocol (Chrome writes to console)
 const originalConsoleLog = console.log;
@@ -40,6 +42,7 @@ server.tool('close_session', 'closes the current browser session', closeSessionT
 server.tool('navigate', 'navigates to a URL', navigateToolArguments, navigateTool);
 
 server.tool('get_visible_elements', 'get a list of visible (in viewport & displayed) elements on the page, must prefer this to take_screenshot for interactions', {}, getVisibleElementsTool);
+server.tool('get_accessibility', 'gets accessibility tree snapshot with semantic information about page elements (roles, names, states)', {}, getAccessibilityTreeTool);
 
 server.tool('scroll_down', 'scrolls the page down by specified pixels', scrollDownToolArguments, scrollDownTool);
 server.tool('scroll_up', 'scrolls the page up by specified pixels', scrollUpToolArguments, scrollUpTool);
@@ -53,6 +56,10 @@ server.tool('get_element_text', 'gets the text content of an element', getElemen
 server.tool('is_displayed', 'checks if an element is displayed', isDisplayedToolArguments, isDisplayedTool);
 
 server.tool('take_screenshot', 'captures a screenshot of the current page', takeScreenshotToolArguments, takeScreenshotTool);
+
+server.tool('get_cookies', 'gets all cookies or a specific cookie by name', getCookiesToolArguments, getCookiesTool);
+server.tool('set_cookie', 'sets a cookie with specified name, value, and optional attributes', setCookieToolArguments, setCookieTool);
+server.tool('delete_cookies', 'deletes all cookies or a specific cookie by name', deleteCookiesToolArguments, deleteCookiesTool);
 
 async function main() {
   const transport = new StdioServerTransport();
