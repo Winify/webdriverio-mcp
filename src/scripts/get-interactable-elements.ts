@@ -141,22 +141,22 @@ const elementsScript = () => (function () {
 
         return {
           tagName: element.tagName.toLowerCase(),
-          type: element.getAttribute('type') || null,
-          id: element.id || null,
-          className: element.className || null,
-          textContent: element.textContent?.trim() || null,
-          value: (element).value || null,
-          placeholder: (element).placeholder || null,
-          href: element.getAttribute('href') || null,
-          ariaLabel: element.getAttribute('aria-label') || null,
-          role: element.getAttribute('role') || null,
+          type: element.getAttribute('type') || undefined,
+          id: element.id || undefined,
+          className: element.className || undefined,
+          textContent: element.textContent?.trim() || undefined,
+          value: (element).value || undefined,
+          placeholder: (element).placeholder || undefined,
+          href: element.getAttribute('href') || undefined,
+          ariaLabel: element.getAttribute('aria-label') || undefined,
+          role: element.getAttribute('role') || undefined,
           cssSelector: getCssSelector(element),
           isInViewport: isInViewport,
         };
       });
 
     return [
-      ...elementInfos.filter(e => e.isInViewport),
+      ...elementInfos,
     ];
   }
 
