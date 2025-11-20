@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-WebDriverIO MCP Server is a Model Context Protocol (MCP) server that enables Claude Desktop to interact with web browsers using WebDriverIO for browser automation. The server is published as an npm package (`webdriverio-mcp`) and runs via stdio transport.
+WebDriverIO MCP Server is a Model Context Protocol (MCP) server that enables Claude Desktop to interact with web browsers and mobile applications using WebDriverIO for automation. The server supports:
+- **Browser automation**: Chrome browser control (headed/headless)
+- **Mobile app automation**: iOS and Android native app testing via Appium
+- **Cross-platform**: Unified API for web, iOS, and Android automation
+
+The server is published as an npm package (`webdriverio-mcp`) and runs via stdio transport.
 
 ## Development Commands
 
@@ -31,14 +36,18 @@ npm start                # Run built server from lib/server.js
 - Registers all tool handlers with the MCP server
 - Uses StdioServerTransport for communication with Claude Desktop
 
-**Browser State Management** (`src/tools/browser.tool.ts`)
-- Maintains global state with `browsers` Map and `currentSession` tracking
-- `getBrowser()` helper retrieves the current active browser instance
-- `startBrowserTool` creates new WebDriverIO remote session with configurable options:
+**Session State Management** (`src/tools/browser.tool.ts` and `src/tools/app-session.tool.ts`)
+- Maintains global state with three Maps:
+  - `browsers`: Map<sessionId, WebdriverIO.Browser> - stores all browser/app instances
+  - `currentSession`: string | null - tracks the single active session
+  - `sessionMetadata`: Map<sessionId, {type, capabilities}> - tracks session type and config
+- `getBrowser()` helper retrieves the current active browser/app instance
+- `startBrowserTool` creates Chrome browser session with configurable options:
   - Headless mode support
   - Custom window dimensions (400-3840 width, 400-2160 height)
   - Chrome-specific arguments (sandbox, security, media stream, etc.)
-- `closeSessionTool` properly cleans up browser sessions
+- `startAppTool` creates iOS/Android app session via Appium with platform-specific capabilities
+- `closeSessionTool` properly cleans up browser/app sessions and metadata
 
 **Tool Pattern**
 All tools follow a consistent pattern:
@@ -72,10 +81,251 @@ All tools follow a consistent pattern:
 
 ### Selector Syntax
 
-The project uses WebDriverIO selector strategies:
+**Web Browsers:**
 - CSS selectors: `button.my-class`, `#element-id`
 - XPath: `//button[@class='my-class']`
 - Text matching: `button=Exact text` (exact match), `a*=Link containing` (partial match)
+
+**Mobile Apps:**
+- Accessibility ID: `~loginButton` (works on both iOS and Android)
+- Android UiAutomator: `android=new UiSelector().text("Login")`
+- iOS Class Chain: `-ios class chain:**/XCUIElementTypeButton[\`label == "Login"\`]`
+- iOS Predicate String: `-ios predicate string:label == "Login" AND visible == 1`
+- XPath: `//android.widget.Button[@text="Login"]` or `//XCUIElementTypeButton[@label="Login"]`
+
+See `src/utils/mobile-selectors.ts` for helper functions to build mobile selectors programmatically.
+
+## Mobile App Automation
+
+### Prerequisites
+
+**Appium Server Setup:**
+The server requires an Appium server running to connect to iOS/Android devices and emulators.
+
+1. **Install Appium:**
+   ```bash
+   npm install -g appium
+   ```
+
+2. **Install Platform Drivers:**
+   ```bash
+   # For iOS
+   appium driver install xcuitest
+
+   # For Android
+   appium driver install uiautomator2
+   ```
+
+3. **Start Appium Server:**
+   ```bash
+   appium
+   # Default: http://127.0.0.1:4723
+   ```
+
+**Device/Emulator Requirements:**
+- **iOS**: Xcode installed, iOS Simulator running, or physical device connected
+- **Android**: Android Studio installed, emulator running, or physical device connected
+
+### Configuration
+
+The server can be configured via environment variables or per-session parameters:
+
+**Environment Variables:**
+- `APPIUM_URL`: Appium server hostname (default: `127.0.0.1`)
+- `APPIUM_URL_PORT`: Appium server port (default: `4723`)
+- `APPIUM_PATH`: Appium server path (default: `/`)
+
+**Example `.env`:**
+```bash
+APPIUM_URL=127.0.0.1
+APPIUM_URL_PORT=4723
+APPIUM_PATH=/
+```
+
+### Starting a Mobile App Session
+
+Use the `start_app_session` tool with platform-specific parameters:
+
+**iOS Example:**
+```typescript
+const parameters = {
+  platform: 'iOS',
+  appPath: '/path/to/MyApp.app',
+  deviceName: 'iPhone 15 Pro',
+  platformVersion: '17.0',
+  automationName: 'XCUITest',  // Optional, defaults to XCUITest
+  autoAcceptAlerts: true,       // Optional, iOS-specific
+}
+```
+
+**Android Example:**
+```typescript
+const parameters = {
+  platform: 'Android',
+  appPath: '/path/to/app.apk',
+  deviceName: 'Pixel_6_API_34',
+  platformVersion: '14',
+  automationName: 'UiAutomator2',      // Optional, defaults to UiAutomator2
+  autoGrantPermissions: true,           // Optional, defaults to true
+  appWaitActivity: 'com.example.MainActivity',  // Optional
+}
+```
+
+**Override Appium Server:**
+```typescript
+const parameters = {
+  platform: 'Android',
+  appPath: '/path/to/app.apk',
+  deviceName: 'emulator-5554',
+  appiumHost: 'localhost',  // Override APPIUM_URL
+  appiumPort: 4724,         // Override APPIUM_URL_PORT
+  appiumPath: '/wd/hub',    // Override APPIUM_PATH
+}
+```
+
+### Session Management
+
+The server maintains a **single-session model**: only one browser or app session is active at a time.
+
+- `start_browser`: Start a Chrome browser session
+- `start_app_session`: Start an iOS or Android app session
+- `close_session`: Close the current session (browser or app)
+
+To switch from browser to app (or vice versa), close the current session first, then start the new one.
+
+### Mobile-Specific Tools
+
+**Touch Gestures:**
+- `tap_element`: Tap element by selector or coordinates
+- `swipe`: Swipe in a direction (up/down/left/right) with configurable duration
+- `long_press`: Long press element or coordinates
+- `drag_and_drop`: Drag from one location to another
+
+**App Lifecycle:**
+- `get_app_state`: Check app state (not installed, not running, background, foreground)
+- `activate_app`: Bring app to foreground
+- `terminate_app`: Kill running app
+
+**Context Switching (Hybrid Apps):**
+- `get_contexts`: List available contexts (NATIVE_APP, WEBVIEW_*)
+- `get_current_context`: Show active context
+- `switch_context`: Switch between native and webview contexts
+
+**Device Interaction:**
+- `get_device_info`: Get platform, version, screen size
+- `rotate_device`: Set orientation (PORTRAIT/LANDSCAPE)
+- `get_orientation`: Get current orientation
+- `lock_device` / `unlock_device`: Control screen lock
+- `is_device_locked`: Check lock status
+- `shake_device`: Simulate shake gesture (iOS only)
+- `send_keys`: Send keyboard input (Android only)
+- `press_key_code`: Press Android key code (e.g., BACK=4, HOME=3)
+- `hide_keyboard` / `is_keyboard_shown`: Keyboard control
+- `open_notifications`: Open notification panel (Android only)
+- `get_geolocation` / `set_geolocation`: GPS control
+
+### Mobile Selector Utilities
+
+The `src/utils/mobile-selectors.ts` module provides helper functions for building mobile selectors:
+
+**Accessibility ID (Cross-platform):**
+```typescript
+import { accessibilityId } from '../utils/mobile-selectors';
+const selector = accessibilityId('loginButton'); // '~loginButton'
+```
+
+**Android UiAutomator:**
+```typescript
+import { androidSelectors } from '../utils/mobile-selectors';
+androidSelectors.text('Login')                    // Text match
+androidSelectors.textContains('Log')              // Partial text
+androidSelectors.resourceId('com.app:id/button')  // Resource ID
+androidSelectors.className('android.widget.Button')
+androidSelectors.description('Login button')
+```
+
+**iOS Predicates and Class Chains:**
+```typescript
+import { iOSSelectors } from '../utils/mobile-selectors';
+iOSSelectors.label('Login')                       // Label match
+iOSSelectors.labelContains('Log')                 // Partial label
+iOSSelectors.name('loginButton')                  // Name attribute
+iOSSelectors.visible()                            // Visible only
+iOSSelectors.type('Button')                       // Element type
+iOSSelectors.and(                                 // Combine conditions
+  iOSSelectors.label('Login'),
+  iOSSelectors.visible()
+)
+```
+
+### Example Workflows
+
+**Testing an iOS App:**
+```typescript
+// 1. Start app session
+start_app_session({
+  platform: 'iOS',
+  appPath: '/path/to/MyApp.app',
+  deviceName: 'iPhone 15 Pro',
+})
+
+// 2. Interact with elements
+tap_element({ selector: '~loginButton' })
+set_value({ selector: '~usernameField', value: 'testuser' })
+tap_element({ selector: '-ios predicate string:label == "Submit"' })
+
+// 3. Verify state
+get_app_state({ bundleId: 'com.example.myapp' })
+
+// 4. Take screenshot
+take_screenshot({ filename: 'login-screen.png' })
+
+// 5. Close session
+close_session()
+```
+
+**Testing an Android App with Webview:**
+```typescript
+// 1. Start app
+start_app_session({
+  platform: 'Android',
+  appPath: '/path/to/app.apk',
+  deviceName: 'emulator-5554',
+  autoGrantPermissions: true,
+})
+
+// 2. Native app interaction
+tap_element({ selector: 'android=new UiSelector().text("Open Web")' })
+
+// 3. Switch to webview context
+get_contexts()  // Lists: NATIVE_APP, WEBVIEW_com.example.app
+switch_context({ context: 'WEBVIEW_com.example.app' })
+
+// 4. Web interaction (use CSS selectors)
+click_element({ selector: '#loginButton' })
+set_value({ selector: '#username', value: 'testuser' })
+
+// 5. Switch back to native
+switch_context({ context: 'NATIVE_APP' })
+
+// 6. Close
+close_session()
+```
+
+**Device Manipulation:**
+```typescript
+// Rotate device
+rotate_device({ orientation: 'LANDSCAPE' })
+
+// Swipe gesture
+swipe({ direction: 'up', duration: 500 })
+
+// Set location
+set_geolocation({ latitude: 37.7749, longitude: -122.4194 })
+
+// Background app
+background_app({ seconds: 5 })  // Background for 5 seconds, then resume
+```
 
 ### Key Implementation Details
 
@@ -85,9 +335,13 @@ The project uses WebDriverIO selector strategies:
 
 3. **Scroll Behavior**: Click operations default to scrolling elements into view (`scrollIntoView` with center alignment) before clicking.
 
-4. **Session Management**: The server maintains a Map of browser sessions keyed by sessionId, but only tracks one `currentSession` at a time. All tools operate on the current session.
+4. **Session Management**: The server maintains a Map of browser/app sessions keyed by sessionId, with a `sessionMetadata` Map tracking session type ('browser', 'ios', 'android') and capabilities. Only one `currentSession` is active at a time. All tools operate on the current session.
 
-5. **Error Handling**: Tools catch errors and return them as text content rather than throwing, ensuring the MCP protocol remains stable.
+5. **Mobile State Sharing**: The `browser.tool.ts` exports state via `(getBrowser as any).__state` to allow `app-session.tool.ts` to access and modify the shared session state. This maintains single-session behavior across browser and mobile automation.
+
+6. **Error Handling**: Tools catch errors and return them as text content rather than throwing, ensuring the MCP protocol remains stable.
+
+7. **Cross-Platform Compatibility**: Many existing tools (click_element, set_value, find_element, take_screenshot, etc.) work seamlessly on both web browsers and mobile apps. Mobile-specific tools (gestures, app lifecycle, device interaction) only work with app sessions.
 
 ## Adding New Tools
 

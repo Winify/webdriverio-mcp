@@ -1,6 +1,7 @@
 import {getBrowser} from './browser.tool';
 import {ToolCallback} from '@modelcontextprotocol/sdk/server/mcp';
 import {CallToolResult} from '@modelcontextprotocol/sdk/types';
+import { encode } from '@toon-format/toon'
 
 /**
  * Flatten a hierarchical accessibility tree into a flat list
@@ -84,7 +85,7 @@ export const getAccessibilityTreeTool: ToolCallback = async (): Promise<CallTool
     return {
       content: [{
         type: 'text',
-        text: JSON.stringify(flattenedNodes),
+        text: encode(flattenedNodes),
       }],
     };
   } catch (e) {

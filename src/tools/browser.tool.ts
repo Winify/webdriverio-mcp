@@ -9,9 +9,14 @@ export const startBrowserToolArguments = {
   windowHeight: z.number().min(400).max(2160).optional(),
 };
 
-const state: { browsers: Map<string, WebdriverIO.Browser>, currentSession: string | null } = {
+const state: {
+  browsers: Map<string, WebdriverIO.Browser>;
+  currentSession: string | null;
+  sessionMetadata: Map<string, { type: 'browser' | 'ios' | 'android'; capabilities: any }>;
+} = {
   browsers: new Map<string, WebdriverIO.Browser>(),
   currentSession: null,
+  sessionMetadata: new Map(),
 };
 
 export const getBrowser = () => {
@@ -21,6 +26,8 @@ export const getBrowser = () => {
   }
   return browser;
 };
+// Export state for app-session.tool.ts to access
+(getBrowser as any).__state = state;
 
 export const startBrowserTool: ToolCallback = async ({headless = false, windowWidth = 1280, windowHeight = 1080}: {
   headless?: boolean;
@@ -59,6 +66,10 @@ export const startBrowserTool: ToolCallback = async ({headless = false, windowWi
   const {sessionId} = browser;
   state.browsers.set(sessionId, browser);
   state.currentSession = sessionId;
+  state.sessionMetadata.set(sessionId, {
+    type: 'browser',
+    capabilities: browser.capabilities,
+  });
 
   const modeText = headless ? 'headless' : 'headed';
   return {
@@ -73,11 +84,12 @@ export const closeSessionTool: ToolCallback = async (): Promise<CallToolResult> 
   try {
     const browser = getBrowser();
     await browser.deleteSession();
-    state.browsers.delete(state.currentSession);
     const sessionId = state.currentSession;
+    state.browsers.delete(state.currentSession);
+    state.sessionMetadata.delete(state.currentSession);
     state.currentSession = null;
     return {
-      content: [{type: 'text', text: `Browser session ${sessionId} closed`}],
+      content: [{type: 'text', text: `Session ${sessionId} closed`}],
     };
   } catch (e) {
     return {

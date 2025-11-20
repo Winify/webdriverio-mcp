@@ -1,15 +1,16 @@
 {
   "name": "webdriverio-mcp",
-  "version": "1.0.2",
+  "version": "1.2.0",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "webdriverio-mcp",
-      "version": "1.0.2",
+      "version": "1.2.0",
       "license": "MIT",
       "dependencies": {
         "@modelcontextprotocol/sdk": "1.12",
+        "@toon-format/toon": "^1.0.0",
         "webdriverio": "9.15"
       },
       "bin": {
@@ -931,6 +932,12 @@
       "os": [
         "win32"
       ]
+    },
+    "node_modules/@toon-format/toon": {
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/@toon-format/toon/-/toon-1.0.0.tgz",
+      "integrity": "sha512-2gIk8LaqrzpurNDaDWZ72kucAGcBbxJxUnp+4ZP+Pny/QVNdMVf97yzSDTI3ed2q8ypjj8T271P6iE3bRmQBNw==",
+      "license": "MIT"
     },
     "node_modules/@tootallnate/quickjs-emscripten": {
       "version": "0.23.0",

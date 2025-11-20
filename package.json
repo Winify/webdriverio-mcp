@@ -5,7 +5,7 @@
     "url": "git://github.com/Winify/webdriverio-mcp.git"
   },
   "version": "1.1.0",
-  "description": "MCP server with WebdriverIO for browser automation",
+  "description": "MCP server with WebdriverIO for browser and mobile app automation (iOS/Android via Appium)",
   "main": "./lib/server.js",
   "module": "./lib/server.js",
   "types": "./lib/server.d.ts",
@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.12",
+    "@toon-format/toon": "^1.0.0",
     "webdriverio": "9.15"
   },
   "devDependencies": {

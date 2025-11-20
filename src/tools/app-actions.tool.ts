@@ -1,0 +1,101 @@
+import { ToolCallback } from '@modelcontextprotocol/sdk/server/mcp';
+import { CallToolResult } from '@modelcontextprotocol/sdk/types';
+import { z } from 'zod';
+import { getBrowser } from './browser.tool';
+
+// Get App State Tool
+export const getAppStateToolArguments = {
+  bundleId: z.string().describe('App bundle ID (e.g., com.example.app)'),
+};
+
+export const getAppStateTool: ToolCallback = async (args: {
+  bundleId: string;
+}): Promise<CallToolResult> => {
+  try {
+    const browser = getBrowser();
+    const { bundleId } = args;
+
+    const appIdentifier = browser.isAndroid
+      ? { appId: bundleId }
+      : { bundleId: bundleId };
+
+    const state: string = await browser.execute('mobile: queryAppState', appIdentifier);
+
+    const stateMap: Record<string, string> = {
+      0: 'not installed',
+      1: 'not running',
+      2: 'running in background (suspended)',
+      3: 'running in background',
+      4: 'running in foreground',
+    };
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `App state for ${bundleId}: ${stateMap[state] || 'unknown: ' + state}`,
+        },
+      ],
+    };
+  } catch (e) {
+    return {
+      content: [{ type: 'text', text: `Error getting app state: ${e}` }],
+    };
+  }
+};
+
+// Activate App Tool
+export const activateAppToolArguments = {
+  bundleId: z.string().describe('App bundle ID to activate (e.g., com.example.app)'),
+};
+
+export const activateAppTool: ToolCallback = async (args: {
+  bundleId: string;
+}): Promise<CallToolResult> => {
+  try {
+    const browser = getBrowser();
+    const { bundleId } = args;
+
+    const appIdentifier = browser.isAndroid
+      ? { appId: bundleId }
+      : { bundleId: bundleId };
+
+    await browser.execute('mobile: activateApp', appIdentifier);
+
+    return {
+      content: [{ type: 'text', text: `Activated app: ${bundleId}` }],
+    };
+  } catch (e) {
+    return {
+      content: [{ type: 'text', text: `Error activating app: ${e}` }],
+    };
+  }
+};
+
+// Terminate App Tool
+export const terminateAppToolArguments = {
+  bundleId: z.string().describe('App bundle ID to terminate (e.g., com.example.app)'),
+};
+
+export const terminateAppTool: ToolCallback = async (args: {
+  bundleId: string;
+}): Promise<CallToolResult> => {
+  try {
+    const browser = getBrowser();
+    const { bundleId } = args;
+
+    const appIdentifier = browser.isAndroid
+      ? { appId: bundleId }
+      : { bundleId: bundleId };
+
+    await browser.execute('mobile: terminateApp', appIdentifier);
+
+    return {
+      content: [{ type: 'text', text: `Terminated app: ${bundleId}` }],
+    };
+  } catch (e) {
+    return {
+      content: [{ type: 'text', text: `Error terminating app: ${e}` }],
+    };
+  }
+};
