@@ -21,12 +21,9 @@ export const startAppToolArguments = {
   appiumHost: z.string().optional().describe('Appium server hostname (overrides APPIUM_URL env var)'),
   appiumPort: z.number().optional().describe('Appium server port (overrides APPIUM_URL_PORT env var)'),
   appiumPath: z.string().optional().describe('Appium server path (overrides APPIUM_PATH env var)'),
-  autoGrantPermissions: z
-    .boolean()
-    .optional()
-    .describe('Auto-grant app permissions (Android only, default: true)'),
-  autoAcceptAlerts: z.boolean().optional().describe('Auto-accept alerts (iOS only)'),
-  autoDismissAlerts: z.boolean().optional().describe('Auto-dismiss alerts (iOS only)'),
+  autoGrantPermissions: z.boolean().optional().describe('Auto-grant app permissions (default: true)'),
+  autoAcceptAlerts: z.boolean().optional().describe('Auto-accept alerts (default: true)'),
+  autoDismissAlerts: z.boolean().optional().describe('Auto-dismiss alerts (default: false, will override "autoAcceptAlerts" to undefined if set)'),
   appWaitActivity: z.string().optional().describe('Activity to wait for on launch (Android only)'),
 };
 
@@ -88,6 +85,7 @@ export const startAppTool: ToolCallback = async (args: {
         deviceName,
         platformVersion,
         automationName: (automationName as 'XCUITest') || 'XCUITest',
+        autoGrantPermissions,
         autoAcceptAlerts,
         autoDismissAlerts,
       });
@@ -98,6 +96,8 @@ export const startAppTool: ToolCallback = async (args: {
         platformVersion,
         automationName: (automationName as 'UiAutomator2' | 'Espresso') || 'UiAutomator2',
         autoGrantPermissions,
+        autoAcceptAlerts,
+        autoDismissAlerts,
         appWaitActivity,
       });
     }
@@ -111,7 +111,7 @@ export const startAppTool: ToolCallback = async (args: {
       capabilities,
     });
 
-    const { sessionId } = browser;
+    const {sessionId} = browser;
 
     // Store session and metadata
     const state = getState();
@@ -132,7 +132,7 @@ export const startAppTool: ToolCallback = async (args: {
     };
   } catch (e) {
     return {
-      content: [{ type: 'text', text: `Error starting app session: ${e}` }],
+      content: [{type: 'text', text: `Error starting app session: ${e}`}],
     };
   }
 };

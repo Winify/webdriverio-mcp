@@ -12,6 +12,7 @@ export interface IOSCapabilityOptions {
   deviceName: string;
   platformVersion?: string;
   automationName?: 'XCUITest';
+  autoGrantPermissions?: boolean;
   autoAcceptAlerts?: boolean;
   autoDismissAlerts?: boolean;
   [key: string]: any;
@@ -22,6 +23,8 @@ export interface AndroidCapabilityOptions {
   platformVersion?: string;
   automationName?: 'UiAutomator2' | 'Espresso';
   autoGrantPermissions?: boolean;
+  autoAcceptAlerts?: boolean;
+  autoDismissAlerts?: boolean;
   appWaitActivity?: string;
   [key: string]: any;
 }
@@ -52,13 +55,12 @@ export function buildIOSCapabilities(
     'appium:app': appPath,
   };
 
-  // Optional iOS-specific settings
-  if (options.autoAcceptAlerts !== undefined) {
-    capabilities['appium:autoAcceptAlerts'] = options.autoAcceptAlerts;
-  }
+  capabilities['appium:autoGrantPermissions'] = options.autoGrantPermissions ?? true;
+  capabilities['appium:autoAcceptAlerts'] = options.autoAcceptAlerts ?? true;
 
   if (options.autoDismissAlerts !== undefined) {
     capabilities['appium:autoDismissAlerts'] = options.autoDismissAlerts;
+    capabilities['appium:autoAcceptAlerts'] = undefined;
   }
 
   // Add any additional custom options
@@ -91,8 +93,12 @@ export function buildAndroidCapabilities(
   };
 
   // Optional Android-specific settings
-  if (options.autoGrantPermissions !== undefined) {
-    capabilities['appium:autoGrantPermissions'] = options.autoGrantPermissions;
+  capabilities['appium:autoGrantPermissions'] = options.autoGrantPermissions ?? true;
+  capabilities['appium:autoAcceptAlerts'] = options.autoAcceptAlerts ?? true;
+
+  if (options.autoDismissAlerts !== undefined) {
+    capabilities['appium:autoDismissAlerts'] = options.autoDismissAlerts;
+    capabilities['appium:autoAcceptAlerts'] = undefined;
   }
 
   if (options.appWaitActivity) {
