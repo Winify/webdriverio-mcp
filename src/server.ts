@@ -11,7 +11,7 @@ import {getElementTextTool, getElementTextToolArguments} from './tools/get-eleme
 import {isDisplayedTool, isDisplayedToolArguments} from './tools/is-displayed.tool';
 import {scrollDownTool, scrollDownToolArguments} from './tools/scroll-down.tool';
 import {scrollUpTool, scrollUpToolArguments} from './tools/scroll-up.tool';
-import {getVisibleElementsTool} from './tools/get-visible-elements.tool';
+import {getVisibleElementsTool, getVisibleElementsToolArguments} from './tools/get-visible-elements.tool';
 import {takeScreenshotTool, takeScreenshotToolArguments} from './tools/take-screenshot.tool';
 import {
   deleteCookiesTool,
@@ -90,7 +90,7 @@ server.tool('start_app_session', 'starts a mobile app session (iOS/Android) via 
 server.tool('close_session', 'closes the current browser or app session', closeSessionTool);
 server.tool('navigate', 'navigates to a URL', navigateToolArguments, navigateTool);
 
-server.tool('get_visible_elements', 'get a list of visible (in viewport & displayed) elements on the page, must prefer this to take_screenshot for interactions', {}, getVisibleElementsTool);
+server.tool('get_visible_elements', 'get a list of visible (in viewport & displayed) elements on the page, must prefer this to take_screenshot for interactions', getVisibleElementsToolArguments, getVisibleElementsTool);
 server.tool('get_accessibility', 'gets accessibility tree snapshot with semantic information about page elements (roles, names, states)', {}, getAccessibilityTreeTool);
 
 server.tool('scroll_down', 'scrolls the page down by specified pixels', scrollDownToolArguments, scrollDownTool);

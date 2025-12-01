@@ -11,6 +11,7 @@
       "dependencies": {
         "@modelcontextprotocol/sdk": "1.12",
         "@toon-format/toon": "^1.0.0",
+        "@xmldom/xmldom": "^0.8.11",
         "webdriverio": "9.15"
       },
       "bin": {
@@ -1076,6 +1077,15 @@
       },
       "engines": {
         "node": ">=18.20.0"
+      }
+    },
+    "node_modules/@xmldom/xmldom": {
+      "version": "0.8.11",
+      "resolved": "https://registry.npmjs.org/@xmldom/xmldom/-/xmldom-0.8.11.tgz",
+      "integrity": "sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=10.0.0"
       }
     },
     "node_modules/@zip.js/zip.js": {

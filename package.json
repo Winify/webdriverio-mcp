@@ -27,6 +27,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.12",
     "@toon-format/toon": "^1.0.0",
+    "@xmldom/xmldom": "^0.8.11",
     "webdriverio": "9.15"
   },
   "devDependencies": {
