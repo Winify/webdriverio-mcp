@@ -22,75 +22,75 @@ A Model Context Protocol (MCP) server that enables Claude Desktop to interact wi
 ## Available Tools
 
 ### Session Management
-| Tool | Description |
-| --- | --- |
-| `start_browser` | Start a Chrome browser session (headless/headed, custom dimensions) |
-| `start_app_session` | Start an iOS or Android app session via Appium |
-| `close_session` | Close the current browser or app session |
+| Tool                | Description                                                         |
+|---------------------|---------------------------------------------------------------------|
+| `start_browser`     | Start a Chrome browser session (headless/headed, custom dimensions) |
+| `start_app_session` | Start an iOS or Android app session via Appium                      |
+| `close_session`     | Close the current browser or app session                            |
 
 ### Navigation & Page Interaction (Web & Mobile)
-| Tool | Description |
-| --- | --- |
-| `navigate` | Navigate to a URL |
-| `get_visible_elements` | Get visible, interactable elements on the page |
-| `get_accessibility` | Get accessibility tree with semantic element information |
-| `scroll_down` | Scroll down by specified pixels |
-| `scroll_up` | Scroll up by specified pixels |
-| `take_screenshot` | Capture a screenshot |
+| Tool                   | Description                                                                                                                                                                                            |
+|------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `navigate`             | Navigate to a URL                                                                                                                                                                                      |
+| `get_visible_elements` | Get visible, interactable elements on the page. Supports `inViewportOnly` (default: true) to filter viewport elements, and `includeContainers` (default: false) to include layout containers on mobile |
+| `get_accessibility`    | Get accessibility tree with semantic element information                                                                                                                                               |
+| `scroll_down`          | Scroll down by specified pixels                                                                                                                                                                        |
+| `scroll_up`            | Scroll up by specified pixels                                                                                                                                                                          |
+| `take_screenshot`      | Capture a screenshot                                                                                                                                                                                   |
 
 ### Element Interaction (Web & Mobile)
-| Tool | Description |
-| --- | --- |
-| `find_element` | Find an element using CSS selectors, XPath, or mobile selectors |
-| `click_element` | Click an element |
-| `click_via_text` | Click an element by text content |
-| `set_value` | Type text into input fields |
-| `get_element_text` | Get text content of an element |
-| `is_displayed` | Check if an element is displayed |
+| Tool               | Description                                                     |
+|--------------------|-----------------------------------------------------------------|
+| `find_element`     | Find an element using CSS selectors, XPath, or mobile selectors |
+| `click_element`    | Click an element                                                |
+| `click_via_text`   | Click an element by text content                                |
+| `set_value`        | Type text into input fields                                     |
+| `get_element_text` | Get text content of an element                                  |
+| `is_displayed`     | Check if an element is displayed                                |
 
 ### Cookie Management (Web)
-| Tool | Description |
-| --- | --- |
-| `get_cookies` | Get all cookies or a specific cookie by name |
-| `set_cookie` | Set a cookie with name, value, and optional attributes |
-| `delete_cookies` | Delete all cookies or a specific cookie |
+| Tool             | Description                                            |
+|------------------|--------------------------------------------------------|
+| `get_cookies`    | Get all cookies or a specific cookie by name           |
+| `set_cookie`     | Set a cookie with name, value, and optional attributes |
+| `delete_cookies` | Delete all cookies or a specific cookie                |
 
 ### Mobile Gestures (iOS/Android)
-| Tool | Description |
-| --- | --- |
-| `tap_element` | Tap an element by selector or coordinates |
-| `swipe` | Swipe in a direction (up/down/left/right) |
-| `long_press` | Long press an element or coordinates |
-| `drag_and_drop` | Drag from one location to another |
+| Tool            | Description                               |
+|-----------------|-------------------------------------------|
+| `tap_element`   | Tap an element by selector or coordinates |
+| `swipe`         | Swipe in a direction (up/down/left/right) |
+| `long_press`    | Long press an element or coordinates      |
+| `drag_and_drop` | Drag from one location to another         |
 
 ### App Lifecycle (iOS/Android)
-| Tool | Description |
-| --- | --- |
+| Tool            | Description                                                  |
+|-----------------|--------------------------------------------------------------|
 | `get_app_state` | Check app state (installed, running, background, foreground) |
-| `activate_app` | Bring app to foreground |
-| `terminate_app` | Terminate a running app |
+| `activate_app`  | Bring app to foreground                                      |
+| `terminate_app` | Terminate a running app                                      |
 
 ### Context Switching (Hybrid Apps)
-| Tool | Description |
-| --- | --- |
-| `get_contexts` | List available contexts (NATIVE_APP, WEBVIEW_*) |
-| `get_current_context` | Show the currently active context |
-| `switch_context` | Switch between native and webview contexts |
+| Tool                  | Description                                     |
+|-----------------------|-------------------------------------------------|
+| `get_contexts`        | List available contexts (NATIVE_APP, WEBVIEW_*) |
+| `get_current_context` | Show the currently active context               |
+| `switch_context`      | Switch between native and webview contexts      |
 
 ### Device Control (iOS/Android)
-| Tool | Description |
-| --- | --- |
-| `get_device_info` | Get device platform, version, screen size |
-| `rotate_device` | Rotate to portrait or landscape orientation |
-| `get_orientation` | Get current device orientation |
-| `lock_device` / `unlock_device` | Lock or unlock device screen |
-| `is_device_locked` | Check if device is locked |
-| `shake_device` | Shake the device (iOS only) |
-| `send_keys` | Send keyboard input (Android only) |
-| `press_key_code` | Press Android key code (BACK=4, HOME=3, etc.) |
-| `hide_keyboard` / `is_keyboard_shown` | Control on-screen keyboard |
-| `open_notifications` | Open notifications panel (Android only) |
-| `get_geolocation` / `set_geolocation` | Get or set device GPS location |
+| Tool                                  | Description                                   |
+|---------------------------------------|-----------------------------------------------|
+| `get_device_info`                     | Get device platform, version, screen size     |
+| `rotate_device`                       | Rotate to portrait or landscape orientation   |
+| `get_orientation`                     | Get current device orientation                |
+| `lock_device` / `unlock_device`       | Lock or unlock device screen                  |
+| `is_device_locked`                    | Check if device is locked                     |
+| `shake_device`                        | Shake the device (iOS only)                   |
+| `send_keys`                           | Send keyboard input (Android only)            |
+| `press_key_code`                      | Press Android key code (BACK=4, HOME=3, etc.) |
+| `hide_keyboard` / `is_keyboard_shown` | Control on-screen keyboard                    |
+| `open_notifications`                  | Open notifications panel (Android only)       |
+| `get_geolocation` / `set_geolocation` | Get or set device GPS location                |
 
 ## Installation & Setup
 
@@ -139,6 +139,28 @@ A Model Context Protocol (MCP) server that enables Claude Desktop to interact wi
 
 ## Usage Examples
 
+### Real-World Test Cases
+
+**Example 1: Testing Demo Android App (Book Scanning)**
+```
+Test the Demo Android app at C:\Users\demo-liveApiGbRegionNonMinifiedRelease-3018788.apk on emulator-5554:
+1. Start the app with auto-grant permissions
+2. Get visible elements on the onboarding screen
+3. Tap "Skip" to bypass onboarding
+4. Verify main screen loads
+5. Take a screenshot
+```
+
+**Example 2: Testing World of Books E-commerce Site**
+```
+You are a Testing expert, and want to assess the basic workflows of worldofbooks.com:
+- Open World of Books (accept all cookies)
+- Get visible elements to see navigation structure
+- Search for a fiction book
+- Choose one and validate if there are NEW and used book options
+- Report your findings at the end
+```
+
 ### Browser Automation
 
 **Basic web testing prompt:**
@@ -181,9 +203,19 @@ Test my iOS app located at /path/to/MyApp.app on iPhone 15 Pro simulator:
 ```
 Test my Android app /path/to/app.apk on the Pixel_6_API_34 emulator:
 1. Start the app with auto-grant permissions
-2. Swipe up to scroll
-3. Tap on the "Settings" button using text matching
-4. Verify the settings screen is displayed
+2. Get visible elements (use inViewportOnly: false to see all elements)
+3. Swipe up to scroll
+4. Tap on the "Settings" button using text matching
+5. Verify the settings screen is displayed
+```
+
+**Advanced element detection:**
+```
+Test my app and debug layout issues:
+1. Start the app session
+2. Get visible elements with includeContainers: true to see the layout hierarchy
+3. Analyze ViewGroup, FrameLayout, and ScrollView containers
+4. Use inViewportOnly: false to find off-screen elements that need scrolling
 ```
 
 **Hybrid app testing (switching contexts):**
@@ -227,6 +259,24 @@ Test my hybrid app:
 - iOS Predicate: `-ios predicate string:label == "Login" AND visible == 1`
 - XPath: `//android.widget.Button[@text="Login"]`
 
+## Advanced Features
+
+### Smart Element Detection
+- **Platform-specific element classification**: Automatically identifies interactable elements vs layout containers
+  - Android: Button, EditText, CheckBox vs ViewGroup, FrameLayout, ScrollView
+  - iOS: Button, TextField, Switch vs View, StackView, CollectionView
+- **Multiple locator strategies**: Each element provides accessibility ID, resource ID, text, XPath, and platform-specific selectors
+- **Viewport filtering**: Control whether to get only visible elements or all elements including off-screen
+- **Layout debugging**: Optionally include container elements to understand UI hierarchy
+
+### Automatic Permission & Alert Handling
+Both iOS and Android sessions now support automatic handling of system permissions and alerts:
+- `autoGrantPermissions` (default: true): Automatically grants app permissions (camera, location, etc.)
+- `autoAcceptAlerts` (default: true): Automatically accepts system alerts and dialogs
+- `autoDismissAlerts` (optional): Set to true to dismiss alerts instead of accepting them
+
+This eliminates the need to manually handle permission popups during automated testing.
+
 ## Technical Details
 
 - **Built with:** TypeScript, WebDriverIO, Appium
@@ -235,6 +285,7 @@ Test my hybrid app:
 - **Protocol:** Model Context Protocol (MCP) for Claude Desktop integration
 - **Session Model:** Single active session (browser or mobile app)
 - **Data Format:** TOON (Token-Oriented Object Notation) for efficient LLM communication
+- **Element Detection:** XML-based page source parsing with intelligent filtering and multi-strategy locator generation
 
 ## Troubleshooting
 

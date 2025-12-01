@@ -64,6 +64,21 @@ All tools follow a consistent pattern:
 - Generates CSS selectors using IDs, classes, or nth-child path-based selectors
 - Returns element metadata: tagName, type, id, className, textContent, value, placeholder, href, ariaLabel, role, cssSelector, isInViewport
 
+**Mobile Element Detection** (`src/locators/` and `src/utils/mobile-elements.ts`)
+- Uses XML-based page source parsing to extract all element attributes
+- Platform-specific element classification:
+  - `ANDROID_INTERACTABLE_TAGS`: Button, EditText, CheckBox, RadioButton, Switch, Spinner, etc.
+  - `ANDROID_LAYOUT_CONTAINERS`: ViewGroup, LinearLayout, RelativeLayout, FrameLayout, ScrollView, etc.
+  - `IOS_INTERACTABLE_TAGS`: Button, TextField, SecureTextField, Switch, Picker, etc.
+  - `IOS_LAYOUT_CONTAINERS`: View, ScrollView, StackView, CollectionView, etc.
+- Generates multiple locator strategies per element:
+  - Accessibility ID (cross-platform)
+  - Resource ID / Name
+  - Text / Label matching
+  - XPath (full and simplified)
+  - UiAutomator (Android) / Predicates (iOS)
+- Smart filtering with `inViewportOnly` and `includeContainers` parameters
+
 ### Build Configuration
 
 **TypeScript** (`tsconfig.json`)
@@ -153,8 +168,10 @@ const parameters = {
   appPath: '/path/to/MyApp.app',
   deviceName: 'iPhone 15 Pro',
   platformVersion: '17.0',
-  automationName: 'XCUITest',  // Optional, defaults to XCUITest
-  autoAcceptAlerts: true,       // Optional, iOS-specific
+  automationName: 'XCUITest',        // Optional, defaults to XCUITest
+  autoGrantPermissions: true,        // Optional, defaults to true (grants app permissions)
+  autoAcceptAlerts: true,            // Optional, defaults to true (auto-accepts system alerts)
+  autoDismissAlerts: false,          // Optional, set to true to dismiss instead of accept
 }
 ```
 
@@ -166,8 +183,10 @@ const parameters = {
   deviceName: 'Pixel_6_API_34',
   platformVersion: '14',
   automationName: 'UiAutomator2',      // Optional, defaults to UiAutomator2
-  autoGrantPermissions: true,           // Optional, defaults to true
-  appWaitActivity: 'com.example.MainActivity',  // Optional
+  autoGrantPermissions: true,           // Optional, defaults to true (grants app permissions automatically)
+  autoAcceptAlerts: true,               // Optional, defaults to true (auto-accepts system alerts)
+  autoDismissAlerts: false,             // Optional, set to true to dismiss instead of accept
+  appWaitActivity: 'com.example.MainActivity',  // Optional, specific activity to wait for
 }
 ```
 
@@ -192,6 +211,33 @@ The server maintains a **single-session model**: only one browser or app session
 - `close_session`: Close the current session (browser or app)
 
 To switch from browser to app (or vice versa), close the current session first, then start the new one.
+
+### Shared Tools (Web & Mobile)
+
+**Element Detection:**
+- `get_visible_elements`: Get visible, interactable elements on the page
+  - Parameters:
+    - `inViewportOnly` (boolean, default: `true`): Only return elements within the visible viewport
+      - Set to `false` to get ALL elements on the page, including off-screen elements
+      - Useful for finding elements that need scrolling to reach
+    - `includeContainers` (boolean, default: `false`): Include layout containers in results
+      - Mobile only: ViewGroup, FrameLayout, ScrollView (Android) or View, StackView (iOS)
+      - Set to `true` to see full layout hierarchy for debugging complex UIs
+      - Web: Not applicable, web elements are not classified as containers
+  - Example usage:
+    ```typescript
+    // Get only viewport-visible interactive elements (default)
+    get_visible_elements()
+
+    // Get all elements including off-screen (useful for scroll testing)
+    get_visible_elements({ inViewportOnly: false })
+
+    // Get all elements including layout containers (mobile debugging)
+    get_visible_elements({ includeContainers: true })
+
+    // Get ALL elements including containers and off-screen
+    get_visible_elements({ inViewportOnly: false, includeContainers: true })
+    ```
 
 ### Mobile-Specific Tools
 
@@ -256,6 +302,63 @@ iOSSelectors.and(                                 // Combine conditions
   iOSSelectors.label('Login'),
   iOSSelectors.visible()
 )
+```
+
+### Real-World Examples
+
+**Example 1: Testing Demo Android App (Book Scanning App)**
+```typescript
+// Real test case: Validate Demo onboarding screen
+// APK: C:\Users\demo-liveApiGbRegionNonMinifiedRelease-3018788.apk
+
+// 1. Start Demo app on Android emulator
+start_app_session({
+  platform: 'Android',
+  appPath: 'C:\\Users\\demo-liveApiGbRegionNonMinifiedRelease-3018788.apk',
+  deviceName: 'emulator-5554',
+  autoGrantPermissions: true,  // Auto-grant camera/storage permissions for scanning
+})
+
+// 2. Get onboarding elements (found 5 elements on "Step 1: Scan" screen)
+get_visible_elements()
+// Returns:
+// - ImageView: "Step One, Scan." (accessibility ID: ~Step One, Scan.)
+// - TextView: "Step 1: Scan" (resourceId: uk.co.demo:id/text_description_onboarding)
+// - TextView: "Scan your old and unwanted items."
+// - TextView: "Skip" button
+// - Button: Navigation button (likely "Next")
+
+// 3. Tap Skip to bypass onboarding
+tap_element({ selector: 'android=new UiSelector().text("Skip")' })
+
+// 4. Interact with main app...
+```
+
+**Example 2: Testing World of Books Website (E-commerce)**
+```typescript
+// Real test case: Validate worldofbooks.com homepage
+
+// 1. Start browser session
+start_browser({ headless: false, windowWidth: 1920, windowHeight: 1080 })
+
+// 2. Navigate to World of Books
+navigate({ url: 'https://www.worldofbooks.com' })
+
+// 3. Get visible elements (found 32 elements including navigation, search, products)
+get_visible_elements()
+// Returns:
+// - Navigation: Cyber Monday, Christmas, Fiction Books, Children's Books, etc.
+// - User account links: Help, Account, Wishlist, Basket
+// - Search input with Algolia autocomplete
+// - Product wishlist buttons (6 products visible)
+// - Cookie consent banner (3 buttons: Settings, Reject All, Accept All)
+
+// 4. Accept cookies
+click_element({ selector: '#onetrust-accept-btn-handler' })
+
+// 5. Search for a book
+set_value({ selector: '#autocomplete-0-input', value: 'Harry Potter' })
+click_element({ selector: '#searchButton' })
 ```
 
 ### Example Workflows
@@ -333,15 +436,33 @@ background_app({ seconds: 5 })  // Background for 5 seconds, then resume
 
 2. **Element Visibility**: The `get-interactable-elements.ts` script runs in the browser and must be completely self-contained (no external dependencies). It filters for visible, non-disabled elements and returns all of them regardless of viewport status.
 
-3. **Scroll Behavior**: Click operations default to scrolling elements into view (`scrollIntoView` with center alignment) before clicking.
+3. **Mobile Element Detection & Locator Generation** (New Architecture - Inspired by `appium-mcp`):
+   - **XML Parsing**: Uses `browser.getPageSource()` to retrieve native XML hierarchy, then parses with platform-specific parsers
+   - **Element Classification**: Filters elements based on platform-specific tag sets:
+     - Interactable elements: Buttons, inputs, checkboxes, switches, pickers, etc.
+     - Layout containers: ViewGroups, ScrollViews, StackViews, CollectionViews, etc.
+   - **Multi-Strategy Locator Generation**: For each element, generates multiple selector options:
+     - Primary: Accessibility ID / Resource ID (most stable)
+     - Secondary: Text/Label matching (language-dependent)
+     - Fallback: XPath with attributes (most specific but brittle)
+     - Platform-specific: UiAutomator (Android) or Predicates (iOS)
+   - **Smart Filtering**:
+     - `inViewportOnly`: Filters elements by screen bounds to show only visible items
+     - `includeContainers`: Controls whether layout wrappers are included in results
+     - `hasMeaningfulContent`: Checks if element has text, description, or interactive children
+   - **Files**: `src/locators/element-filter.ts`, `src/locators/generate-all-locators.ts`, `src/locators/source-parsing.ts`
 
-4. **Session Management**: The server maintains a Map of browser/app sessions keyed by sessionId, with a `sessionMetadata` Map tracking session type ('browser', 'ios', 'android') and capabilities. Only one `currentSession` is active at a time. All tools operate on the current session.
+4. **Scroll Behavior**: Click operations default to scrolling elements into view (`scrollIntoView` with center alignment) before clicking.
 
-5. **Mobile State Sharing**: The `browser.tool.ts` exports state via `(getBrowser as any).__state` to allow `app-session.tool.ts` to access and modify the shared session state. This maintains single-session behavior across browser and mobile automation.
+5. **Session Management**: The server maintains a Map of browser/app sessions keyed by sessionId, with a `sessionMetadata` Map tracking session type ('browser', 'ios', 'android') and capabilities. Only one `currentSession` is active at a time. All tools operate on the current session.
 
-6. **Error Handling**: Tools catch errors and return them as text content rather than throwing, ensuring the MCP protocol remains stable.
+6. **Mobile State Sharing**: The `browser.tool.ts` exports state via `(getBrowser as any).__state` to allow `app-session.tool.ts` to access and modify the shared session state. This maintains single-session behavior across browser and mobile automation.
 
-7. **Cross-Platform Compatibility**: Many existing tools (click_element, set_value, find_element, take_screenshot, etc.) work seamlessly on both web browsers and mobile apps. Mobile-specific tools (gestures, app lifecycle, device interaction) only work with app sessions.
+7. **Automatic Permission & Alert Handling**: Appium capabilities now include `autoGrantPermissions`, `autoAcceptAlerts`, and `autoDismissAlerts` by default, eliminating manual handling of permission popups. These settings are applied during session initialization in `src/config/appium.config.ts`.
+
+8. **Error Handling**: Tools catch errors and return them as text content rather than throwing, ensuring the MCP protocol remains stable.
+
+9. **Cross-Platform Compatibility**: Many existing tools (click_element, set_value, find_element, take_screenshot, etc.) work seamlessly on both web browsers and mobile apps. Mobile-specific tools (gestures, app lifecycle, device interaction) only work with app sessions.
 
 ## Adding New Tools
 
