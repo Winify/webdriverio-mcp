@@ -109,6 +109,10 @@ A Model Context Protocol (MCP) server that enables Claude Desktop to interact wi
 - **Devices/Emulators**:
   - iOS Simulator (macOS) or physical device
   - Android Emulator or physical device
+- **For iOS Real Devices**: You'll need the device's UDID (Unique Device Identifier)
+  - **Find UDID on macOS**: Connect device → Open Finder → Select device → Click device name/model to reveal UDID
+  - **Find UDID on Windows**: Connect device → iTunes or Apple Devices app → Click device icon → Click "Serial Number" to reveal UDID
+  - **Xcode method**: Window → Devices and Simulators → Select device → UDID shown as "Identifier"
 
 ### Installation
 
@@ -189,7 +193,7 @@ start_browser({ headless: true, windowWidth: 1920, windowHeight: 1080 })
 
 ### Mobile App Automation
 
-**Testing an iOS app:**
+**Testing an iOS app on simulator:**
 ```
 Test my iOS app located at /path/to/MyApp.app on iPhone 15 Pro simulator:
 1. Start the app session
@@ -197,6 +201,19 @@ Test my iOS app located at /path/to/MyApp.app on iPhone 15 Pro simulator:
 3. Enter "testuser" in the username field
 4. Take a screenshot of the home screen
 5. Close the session
+```
+
+**Testing an iOS app on real device:**
+```
+Test my iOS app on my physical iPhone:
+1. Start app session with:
+   - platform: iOS
+   - appPath: /path/to/MyApp.ipa
+   - deviceName: My iPhone
+   - udid: 00008030-001234567890ABCD (your device's UDID)
+   - platformVersion: 17.0
+2. Run your test scenario
+3. Close the session
 ```
 
 **Testing an Android app:**
@@ -245,6 +262,7 @@ Test my hybrid app:
 - Appium server must be running before starting mobile sessions
 - Ensure emulators/simulators are running and devices are connected
 - iOS automation requires macOS with Xcode installed
+- **iOS Real Devices**: Testing on physical iOS devices requires the device's UDID (40-character unique identifier). See Prerequisites section for how to find your UDID
 
 ## Selector Syntax Quick Reference
 

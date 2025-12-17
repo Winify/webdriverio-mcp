@@ -161,7 +161,7 @@ APPIUM_PATH=/
 
 Use the `start_app_session` tool with platform-specific parameters:
 
-**iOS Example:**
+**iOS Example (Simulator):**
 ```typescript
 const parameters = {
   platform: 'iOS',
@@ -174,6 +174,47 @@ const parameters = {
   autoDismissAlerts: false,          // Optional, set to true to dismiss instead of accept
 }
 ```
+
+**iOS Example (Real Device):**
+```typescript
+const parameters = {
+  platform: 'iOS',
+  appPath: '/path/to/MyApp.ipa',
+  deviceName: 'My iPhone',           // Physical device name
+  platformVersion: '17.0',
+  udid: '00008030-001234567890ABCD',  // Required for physical devices (40-character hex string)
+  automationName: 'XCUITest',        // Optional, defaults to XCUITest
+  autoGrantPermissions: true,        // Optional, defaults to true (grants app permissions)
+  autoAcceptAlerts: true,            // Optional, defaults to true (auto-accepts system alerts)
+  autoDismissAlerts: false,          // Optional, set to true to dismiss instead of accept
+}
+```
+
+**Finding Your iOS Device UDID:**
+The UDID (Unique Device Identifier) is a 40-character alphanumeric string required when testing on physical iOS devices.
+
+Methods to find your device's UDID:
+
+1. **Xcode (Devices and Simulators):**
+   - Connect your iOS device via USB
+   - Open Xcode → Window → Devices and Simulators
+   - Select your device in the left sidebar
+   - The UDID is shown as "Identifier" (e.g., `00008030-001234567890ABCD`)
+
+2. **Terminal (using xcrun):**
+   ```bash
+   xcrun xctrace list devices
+   ```
+   Output shows connected devices with their UDIDs:
+   ```
+   My iPhone (17.0) (00008030-001234567890ABCD)
+   ```
+
+3. **Finder (macOS Catalina and later):**
+   - Connect your device via USB
+   - Open Finder and select your device in the sidebar
+   - Click on the device info below the device name to cycle through information
+   - The UDID will be displayed
 
 **Android Example:**
 ```typescript
@@ -363,9 +404,9 @@ click_element({ selector: '#searchButton' })
 
 ### Example Workflows
 
-**Testing an iOS App:**
+**Testing an iOS App (Simulator):**
 ```typescript
-// 1. Start app session
+// 1. Start app session on simulator
 start_app_session({
   platform: 'iOS',
   appPath: '/path/to/MyApp.app',
@@ -382,6 +423,33 @@ get_app_state({ bundleId: 'com.example.myapp' })
 
 // 4. Take screenshot
 take_screenshot({ filename: 'login-screen.png' })
+
+// 5. Close session
+close_session()
+```
+
+**Testing an iOS App (Real Device):**
+```typescript
+// 1. Start app session on physical device
+start_app_session({
+  platform: 'iOS',
+  appPath: '/path/to/MyApp.ipa',
+  deviceName: 'My iPhone',
+  platformVersion: '17.0',
+  udid: '00008030-001234567890ABCD',  // Device UDID required
+})
+
+// 2. Interact with elements
+tap_element({ selector: '~loginButton' })
+set_value({ selector: '~usernameField', value: 'testuser' })
+tap_element({ selector: '-ios predicate string:label == "Submit"' })
+
+// 3. Test device-specific features
+get_device_info()  // Returns physical device info
+set_geolocation({ latitude: 37.7749, longitude: -122.4194 })
+
+// 4. Take screenshot
+take_screenshot({ filename: 'real-device-test.png' })
 
 // 5. Close session
 close_session()

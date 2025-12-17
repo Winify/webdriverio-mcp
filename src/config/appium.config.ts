@@ -15,6 +15,7 @@ export interface IOSCapabilityOptions {
   autoGrantPermissions?: boolean;
   autoAcceptAlerts?: boolean;
   autoDismissAlerts?: boolean;
+  udid?: string;
   [key: string]: any;
 }
 
@@ -55,6 +56,11 @@ export function buildIOSCapabilities(
     'appium:app': appPath,
   };
 
+  // Set UDID for real device testing (required for physical iOS devices)
+  if (options.udid) {
+    capabilities['appium:udid'] = options.udid;
+  }
+
   capabilities['appium:autoGrantPermissions'] = options.autoGrantPermissions ?? true;
   capabilities['appium:autoAcceptAlerts'] = options.autoAcceptAlerts ?? true;
 
@@ -66,7 +72,7 @@ export function buildIOSCapabilities(
   // Add any additional custom options
   for (const [key, value] of Object.entries(options)) {
     if (
-      !['deviceName', 'platformVersion', 'automationName', 'autoAcceptAlerts', 'autoDismissAlerts'].includes(
+      !['deviceName', 'platformVersion', 'automationName', 'autoAcceptAlerts', 'autoDismissAlerts', 'udid'].includes(
         key,
       )
     ) {

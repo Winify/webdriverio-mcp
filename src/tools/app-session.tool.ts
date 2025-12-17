@@ -25,6 +25,7 @@ export const startAppToolArguments = {
   autoAcceptAlerts: z.boolean().optional().describe('Auto-accept alerts (default: true)'),
   autoDismissAlerts: z.boolean().optional().describe('Auto-dismiss alerts (default: false, will override "autoAcceptAlerts" to undefined if set)'),
   appWaitActivity: z.string().optional().describe('Activity to wait for on launch (Android only)'),
+  udid: z.string().optional().describe('Unique Device Identifier for iOS real device testing (e.g., "00008030-001234567890002E")'),
 };
 
 // Access shared state from browser.tool.ts
@@ -53,6 +54,7 @@ export const startAppTool: ToolCallback = async (args: {
   autoAcceptAlerts?: boolean;
   autoDismissAlerts?: boolean;
   appWaitActivity?: string;
+  udid?: string;
 }): Promise<CallToolResult> => {
   try {
     const {
@@ -68,6 +70,7 @@ export const startAppTool: ToolCallback = async (args: {
       autoAcceptAlerts,
       autoDismissAlerts,
       appWaitActivity,
+      udid,
     } = args;
 
     // Get Appium server configuration
@@ -88,6 +91,7 @@ export const startAppTool: ToolCallback = async (args: {
         autoGrantPermissions,
         autoAcceptAlerts,
         autoDismissAlerts,
+        udid,
       });
     } else {
       // Android
