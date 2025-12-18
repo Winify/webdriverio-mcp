@@ -76,7 +76,7 @@ console.debug = (...args) => console.error('[DEBUG]', ...args);
 
 const server = new McpServer({
   name: 'MCP WebdriverIO',
-  version: '1.3.0',
+  version: '1.4.0',
 }, {
   capabilities: {
     resources: {},
