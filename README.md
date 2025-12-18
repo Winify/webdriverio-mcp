@@ -22,11 +22,11 @@ A Model Context Protocol (MCP) server that enables Claude Desktop to interact wi
 ## Available Tools
 
 ### Session Management
-| Tool                | Description                                                         |
-|---------------------|---------------------------------------------------------------------|
-| `start_browser`     | Start a Chrome browser session (headless/headed, custom dimensions) |
-| `start_app_session` | Start an iOS or Android app session via Appium                      |
-| `close_session`     | Close the current browser or app session                            |
+| Tool                | Description                                                                               |
+|---------------------|-------------------------------------------------------------------------------------------|
+| `start_browser`     | Start a Chrome browser session (headless/headed, custom dimensions)                       |
+| `start_app_session` | Start an iOS or Android app session via Appium (supports state preservation via noReset) |
+| `close_session`     | Close or detach from the current browser or app session (supports detach mode)            |
 
 ### Navigation & Page Interaction (Web & Mobile)
 | Tool                   | Description                                                                                                                                                                                            |
@@ -203,6 +203,15 @@ Test my iOS app located at /path/to/MyApp.app on iPhone 15 Pro simulator:
 5. Close the session
 ```
 
+**Preserving app state between sessions:**
+```
+Test my Android app without resetting data:
+1. Start app session with noReset: true and fullReset: false
+2. App launches with existing login state and user data preserved
+3. Run test scenarios
+4. Close session (app remains installed with data intact)
+```
+
 **Testing an iOS app on real device:**
 ```
 Test my iOS app on my physical iPhone:
@@ -253,6 +262,9 @@ Test my hybrid app:
 - Only one session (browser OR app) can be active at a time
 - Always close sessions when done to free system resources
 - To switch between browser and mobile, close the current session first
+- Use `close_session({ detach: true })` to disconnect without terminating the session on the Appium server
+- **State preservation** can be controlled with `noReset` and `fullReset` parameters during session creation
+- Sessions created with `noReset: true` or without `appPath` will automatically detach on close
 
 ⚠️ **Task Planning:**
 - Break complex automation into smaller, focused operations
@@ -278,6 +290,50 @@ Test my hybrid app:
 - XPath: `//android.widget.Button[@text="Login"]`
 
 ## Advanced Features
+
+### App State Preservation
+
+**State Preservation with noReset/fullReset:**
+Control app state when creating new sessions using the `noReset` and `fullReset` parameters:
+
+| noReset | fullReset | Behavior                                                |
+|---------|-----------|---------------------------------------------------------|
+| `true`  | `false`   | Preserve state: App stays installed, data preserved     |
+| `false` | `false`   | Clear app data but keep app installed (default)         |
+| `false` | `true`    | Full reset: Uninstall and reinstall app (clean slate)   |
+
+**Example with state preservation:**
+```javascript
+// Preserve login state between test runs
+start_app_session({
+  platform: 'Android',
+  appPath: '/path/to/app.apk',
+  deviceName: 'emulator-5554',
+  noReset: true,         // Don't reset app state
+  fullReset: false,      // Don't uninstall
+  autoGrantPermissions: true
+})
+// App launches with existing user data, login tokens, preferences intact
+```
+
+**Detach from Sessions:**
+The `close_session` tool supports a `detach` parameter that disconnects from the session without terminating it on the Appium server:
+
+```javascript
+// Detach without killing the session
+close_session({ detach: true })
+
+// Standard session termination (closes the app and removes session)
+close_session({ detach: false })  // or just close_session()
+```
+
+Sessions created with `noReset: true` or without `appPath` will automatically detach on close.
+
+This is particularly useful when:
+
+* Preserving app state for manual testing continuation
+* Debugging multi-step workflows (leave session running between tool invocations)
+* Testing scenarios where you want the app to remain installed and in current state
 
 ### Smart Element Detection
 - **Platform-specific element classification**: Automatically identifies interactable elements vs layout containers

@@ -11,7 +11,7 @@ import { getBrowser } from './browser.tool';
 
 export const startAppToolArguments = {
   platform: z.enum(['iOS', 'Android']).describe('Mobile platform'),
-  appPath: z.string().describe('Path to the app file (.app/.apk/.ipa)'),
+  appPath: z.string().optional().describe('Path to the app file (.app/.apk/.ipa). Required unless noReset=true (connecting to already-running app)'),
   deviceName: z.string().describe('Device/emulator/simulator name'),
   platformVersion: z.string().optional().describe('OS version (e.g., "17.0", "14")'),
   automationName: z
@@ -26,6 +26,8 @@ export const startAppToolArguments = {
   autoDismissAlerts: z.boolean().optional().describe('Auto-dismiss alerts (default: false, will override "autoAcceptAlerts" to undefined if set)'),
   appWaitActivity: z.string().optional().describe('Activity to wait for on launch (Android only)'),
   udid: z.string().optional().describe('Unique Device Identifier for iOS real device testing (e.g., "00008030-001234567890002E")'),
+  noReset: z.boolean().optional().describe('Do not reset app state before session (preserves app data). Default: false'),
+  fullReset: z.boolean().optional().describe('Uninstall app before/after session. Default: true. Set to false with noReset=true to preserve app state completely'),
 };
 
 // Access shared state from browser.tool.ts
@@ -37,13 +39,13 @@ const getState = () => {
   return sharedState as {
     browsers: Map<string, WebdriverIO.Browser>;
     currentSession: string | null;
-    sessionMetadata: Map<string, { type: 'browser' | 'ios' | 'android'; capabilities: any }>;
+    sessionMetadata: Map<string, { type: 'browser' | 'ios' | 'android'; capabilities: any; isAttached: boolean }>;
   };
 };
 
 export const startAppTool: ToolCallback = async (args: {
   platform: 'iOS' | 'Android';
-  appPath: string;
+  appPath?: string;
   deviceName: string;
   platformVersion?: string;
   automationName?: 'XCUITest' | 'UiAutomator2' | 'Espresso';
@@ -55,6 +57,8 @@ export const startAppTool: ToolCallback = async (args: {
   autoDismissAlerts?: boolean;
   appWaitActivity?: string;
   udid?: string;
+  noReset?: boolean;
+  fullReset?: boolean;
 }): Promise<CallToolResult> => {
   try {
     const {
@@ -71,7 +75,19 @@ export const startAppTool: ToolCallback = async (args: {
       autoDismissAlerts,
       appWaitActivity,
       udid,
+      noReset,
+      fullReset,
     } = args;
+
+    // Validate: either appPath or noReset=true is required
+    if (!appPath && noReset !== true) {
+      return {
+        content: [{
+          type: 'text',
+          text: 'Error: Either "appPath" must be provided to install an app, or "noReset: true" must be set to connect to an already-running app.',
+        }],
+      };
+    }
 
     // Get Appium server configuration
     const serverConfig = getAppiumServerConfig({
@@ -92,6 +108,8 @@ export const startAppTool: ToolCallback = async (args: {
         autoAcceptAlerts,
         autoDismissAlerts,
         udid,
+        noReset,
+        fullReset,
       });
     } else {
       // Android
@@ -103,6 +121,8 @@ export const startAppTool: ToolCallback = async (args: {
         autoAcceptAlerts,
         autoDismissAlerts,
         appWaitActivity,
+        noReset,
+        fullReset,
       });
     }
 
@@ -118,19 +138,26 @@ export const startAppTool: ToolCallback = async (args: {
     const {sessionId} = browser;
 
     // Store session and metadata
+    // Auto-set isAttached=true when noReset or no appPath to preserve session on close
+    const shouldAutoDetach = noReset === true || !appPath;
     const state = getState();
     state.browsers.set(sessionId, browser);
     state.currentSession = sessionId;
     state.sessionMetadata.set(sessionId, {
       type: platform.toLowerCase() as 'ios' | 'android',
       capabilities,
+      isAttached: shouldAutoDetach,
     });
 
+    const appInfo = appPath ? `\nApp: ${appPath}` : '\nApp: (connected to running app)';
+    const detachNote = shouldAutoDetach
+      ? '\n\n(Auto-detach enabled: session will be preserved on close. Use close_session({ detach: false }) to force terminate.)'
+      : '';
     return {
       content: [
         {
           type: 'text',
-          text: `${platform} app session started with sessionId: ${sessionId}\nDevice: ${deviceName}\nApp: ${appPath}\nAppium Server: ${serverConfig.hostname}:${serverConfig.port}${serverConfig.path}`,
+          text: `${platform} app session started with sessionId: ${sessionId}\nDevice: ${deviceName}${appInfo}\nAppium Server: ${serverConfig.hostname}:${serverConfig.port}${serverConfig.path}${detachNote}`,
         },
       ],
     };
@@ -140,3 +167,4 @@ export const startAppTool: ToolCallback = async (args: {
     };
   }
 };
+

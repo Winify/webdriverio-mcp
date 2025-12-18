@@ -46,8 +46,14 @@ npm start                # Run built server from lib/server.js
   - Headless mode support
   - Custom window dimensions (400-3840 width, 400-2160 height)
   - Chrome-specific arguments (sandbox, security, media stream, etc.)
-- `startAppTool` creates iOS/Android app session via Appium with platform-specific capabilities
-- `closeSessionTool` properly cleans up browser/app sessions and metadata
+- `startAppTool` creates iOS/Android app session via Appium with platform-specific capabilities:
+  - `noReset`: Controls whether to preserve app state between sessions (default: false)
+  - `fullReset`: Controls whether to uninstall app before/after session (default: true)
+  - Sessions created with `noReset: true` will automatically detach on close (preserves session state)
+- `closeSessionTool` properly cleans up browser/app sessions and metadata:
+  - `detach: false` (default): Calls `deleteSession()` to terminate on server
+  - `detach: true`: Disconnects without terminating (preserves session for manual testing)
+  - Sessions created without `appPath` or with `noReset: true` automatically detach
 
 **Tool Pattern**
 All tools follow a consistent pattern:
@@ -172,6 +178,8 @@ const parameters = {
   autoGrantPermissions: true,        // Optional, defaults to true (grants app permissions)
   autoAcceptAlerts: true,            // Optional, defaults to true (auto-accepts system alerts)
   autoDismissAlerts: false,          // Optional, set to true to dismiss instead of accept
+  noReset: false,                    // Optional, defaults to false (preserves app state if true)
+  fullReset: true,                   // Optional, defaults to true (uninstalls app if true)
 }
 ```
 
@@ -228,6 +236,8 @@ const parameters = {
   autoAcceptAlerts: true,               // Optional, defaults to true (auto-accepts system alerts)
   autoDismissAlerts: false,             // Optional, set to true to dismiss instead of accept
   appWaitActivity: 'com.example.MainActivity',  // Optional, specific activity to wait for
+  noReset: false,                       // Optional, defaults to false (preserves app state if true)
+  fullReset: true,                      // Optional, defaults to true (uninstalls app if true)
 }
 ```
 
@@ -243,15 +253,58 @@ const parameters = {
 }
 ```
 
+**App State Reset Behavior:**
+
+Control how app state is handled during session creation using `noReset` and `fullReset` parameters:
+
+| noReset | fullReset | Behavior |
+|---------|-----------|----------|
+| `false` (default) | `true` (default) | Full reset: Uninstall and reinstall app (clean state) |
+| `false` | `false` | Clear app data but keep app installed |
+| `true` | `false` | Preserve state: App stays installed, data preserved |
+
+**Examples:**
+```typescript
+// Default: Clean install (uninstall/reinstall)
+start_app_session({ platform: 'Android', appPath: '/path/to/app.apk', deviceName: 'emulator-5554' })
+
+// Continue from current state (preserve app data)
+start_app_session({
+  platform: 'Android',
+  appPath: '/path/to/app.apk',
+  deviceName: 'emulator-5554',
+  noReset: true,
+  fullReset: false
+})
+
+// Clear app data but don't uninstall
+start_app_session({
+  platform: 'Android',
+  appPath: '/path/to/app.apk',
+  deviceName: 'emulator-5554',
+  noReset: false,
+  fullReset: false
+})
+```
+
 ### Session Management
 
 The server maintains a **single-session model**: only one browser or app session is active at a time.
 
-- `start_browser`: Start a Chrome browser session
-- `start_app_session`: Start an iOS or Android app session
-- `close_session`: Close the current session (browser or app)
+**Session Creation:**
+- `start_browser`: Start a new Chrome browser session
+- `start_app_session`: Start a new iOS or Android app session with full control over app state (noReset/fullReset)
+  - Sessions created with `noReset: true` will automatically detach on close (preserves session state)
+  - Sessions created without `appPath` will automatically detach on close
 
-To switch from browser to app (or vice versa), close the current session first, then start the new one.
+**Session Closure:**
+- `close_session`: Close or detach from the current session
+  - `detach: false` (default): Terminate session on Appium server
+  - `detach: true`: Disconnect without terminating (preserves session for manual testing)
+  - Automatically detaches sessions created with `noReset: true` or without `appPath`
+
+**Session Switching:**
+To switch from browser to app (or vice versa), close the current session first, then start a new one.
 
 ### Shared Tools (Web & Mobile)
 
@@ -404,6 +457,51 @@ click_element({ selector: '#searchButton' })
 
 ### Example Workflows
 
+**Workflow 1: Preserve App State Between Sessions**
+```typescript
+// Scenario: App already installed and logged in, want to test from current state
+
+// 1. Start session without resetting app state
+start_app_session({
+  platform: 'Android',
+  appPath: '/path/to/app.apk',
+  deviceName: 'emulator-5554',
+  noReset: true,           // Preserve app data
+  fullReset: false,        // Don't uninstall
+})
+
+// 2. App continues from current state (user logged in, settings preserved)
+get_visible_elements()
+
+// 3. Test feature without re-login
+tap_element({ selector: 'android=new UiSelector().text("Dashboard")' })
+
+// 4. Close session normally (app stays installed)
+close_session()
+```
+
+**Workflow 2: Clean App Install for Fresh Test**
+```typescript
+// Scenario: Need fresh app state for regression testing
+
+// 1. Start session with full reset (default behavior)
+start_app_session({
+  platform: 'Android',
+  appPath: '/path/to/app.apk',
+  deviceName: 'emulator-5554',
+  // noReset defaults to false, fullReset defaults to true
+})
+
+// 2. App is freshly installed (no previous data)
+get_visible_elements()
+
+// 3. Test onboarding flow from scratch
+tap_element({ selector: 'android=new UiSelector().text("Get Started")' })
+
+// 4. Close session (app uninstalled automatically)
+close_session()
+```
+
 **Testing an iOS App (Simulator):**
 ```typescript
 // 1. Start app session on simulator
@@ -522,7 +620,7 @@ background_app({ seconds: 5 })  // Background for 5 seconds, then resume
 
 4. **Scroll Behavior**: Click operations default to scrolling elements into view (`scrollIntoView` with center alignment) before clicking.
 
-5. **Session Management**: The server maintains a Map of browser/app sessions keyed by sessionId, with a `sessionMetadata` Map tracking session type ('browser', 'ios', 'android') and capabilities. Only one `currentSession` is active at a time. All tools operate on the current session.
+5. **Session Management**: The server maintains a Map of browser/app sessions keyed by sessionId, with a `sessionMetadata` Map tracking session type ('browser', 'ios', 'android') and capabilities. Only one `currentSession` is active at a time. All tools operate on the current session. Sessions can be created with `start_browser` or `start_app_session`. When closing, `detach: true` preserves the session on the Appium server for continued manual testing. Sessions created with `noReset: true` or without `appPath` automatically detach on close.
 
 6. **Mobile State Sharing**: The `browser.tool.ts` exports state via `(getBrowser as any).__state` to allow `app-session.tool.ts` to access and modify the shared session state. This maintains single-session behavior across browser and mobile automation.
 

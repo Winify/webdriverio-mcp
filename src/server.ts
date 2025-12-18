@@ -2,7 +2,7 @@
 
 import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
-import {closeSessionTool, startBrowserTool, startBrowserToolArguments} from './tools/browser.tool';
+import {closeSessionTool, closeSessionToolArguments, startBrowserTool, startBrowserToolArguments} from './tools/browser.tool';
 import {navigateTool, navigateToolArguments} from './tools/navigate.tool';
 import {clickTool, clickToolArguments, clickToolViaText} from './tools/click.tool';
 import {setValueTool, setValueToolArguments} from './tools/set-value.tool';
@@ -87,7 +87,7 @@ const server = new McpServer({
 // Browser and App Session Management
 server.tool('start_browser', 'starts a browser session and sets it to the current state', startBrowserToolArguments, startBrowserTool);
 server.tool('start_app_session', 'starts a mobile app session (iOS/Android) via Appium', startAppToolArguments, startAppTool);
-server.tool('close_session', 'closes the current browser or app session', closeSessionTool);
+server.tool('close_session', 'closes or detaches from the current browser or app session', closeSessionToolArguments, closeSessionTool);
 server.tool('navigate', 'navigates to a URL', navigateToolArguments, navigateTool);
 
 server.tool('get_visible_elements', 'get a list of visible (in viewport & displayed) elements on the page, must prefer this to take_screenshot for interactions', getVisibleElementsToolArguments, getVisibleElementsTool);
