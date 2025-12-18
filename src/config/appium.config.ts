@@ -16,6 +16,8 @@ export interface IOSCapabilityOptions {
   autoAcceptAlerts?: boolean;
   autoDismissAlerts?: boolean;
   udid?: string;
+  noReset?: boolean;
+  fullReset?: boolean;
   [key: string]: any;
 }
 
@@ -27,6 +29,8 @@ export interface AndroidCapabilityOptions {
   autoAcceptAlerts?: boolean;
   autoDismissAlerts?: boolean;
   appWaitActivity?: string;
+  noReset?: boolean;
+  fullReset?: boolean;
   [key: string]: any;
 }
 
@@ -45,7 +49,7 @@ export function getAppiumServerConfig(overrides?: Partial<AppiumServerConfig>): 
  * Build iOS capabilities for Appium session
  */
 export function buildIOSCapabilities(
-  appPath: string,
+  appPath: string | undefined,
   options: IOSCapabilityOptions,
 ): Record<string, any> {
   const capabilities: Record<string, any> = {
@@ -53,12 +57,24 @@ export function buildIOSCapabilities(
     'appium:platformVersion': options.platformVersion,
     'appium:deviceName': options.deviceName,
     'appium:automationName': options.automationName || 'XCUITest',
-    'appium:app': appPath,
   };
+
+  // Only set app path if provided (allows connecting to already-running app)
+  if (appPath) {
+    capabilities['appium:app'] = appPath;
+  }
 
   // Set UDID for real device testing (required for physical iOS devices)
   if (options.udid) {
     capabilities['appium:udid'] = options.udid;
+  }
+
+  // Set reset behavior (for preserving app state)
+  if (options.noReset !== undefined) {
+    capabilities['appium:noReset'] = options.noReset;
+  }
+  if (options.fullReset !== undefined) {
+    capabilities['appium:fullReset'] = options.fullReset;
   }
 
   capabilities['appium:autoGrantPermissions'] = options.autoGrantPermissions ?? true;
@@ -72,7 +88,7 @@ export function buildIOSCapabilities(
   // Add any additional custom options
   for (const [key, value] of Object.entries(options)) {
     if (
-      !['deviceName', 'platformVersion', 'automationName', 'autoAcceptAlerts', 'autoDismissAlerts', 'udid'].includes(
+      !['deviceName', 'platformVersion', 'automationName', 'autoAcceptAlerts', 'autoDismissAlerts', 'udid', 'noReset', 'fullReset'].includes(
         key,
       )
     ) {
@@ -87,7 +103,7 @@ export function buildIOSCapabilities(
  * Build Android capabilities for Appium session
  */
 export function buildAndroidCapabilities(
-  appPath: string,
+  appPath: string | undefined,
   options: AndroidCapabilityOptions,
 ): Record<string, any> {
   const capabilities: Record<string, any> = {
@@ -95,8 +111,20 @@ export function buildAndroidCapabilities(
     'appium:platformVersion': options.platformVersion,
     'appium:deviceName': options.deviceName,
     'appium:automationName': options.automationName || 'UiAutomator2',
-    'appium:app': appPath,
   };
+
+  // Only set app path if provided (allows connecting to already-running app)
+  if (appPath) {
+    capabilities['appium:app'] = appPath;
+  }
+
+  // Set reset behavior (for preserving app state)
+  if (options.noReset !== undefined) {
+    capabilities['appium:noReset'] = options.noReset;
+  }
+  if (options.fullReset !== undefined) {
+    capabilities['appium:fullReset'] = options.fullReset;
+  }
 
   // Optional Android-specific settings
   capabilities['appium:autoGrantPermissions'] = options.autoGrantPermissions ?? true;
@@ -114,7 +142,7 @@ export function buildAndroidCapabilities(
   // Add any additional custom options
   for (const [key, value] of Object.entries(options)) {
     if (
-      !['deviceName', 'platformVersion', 'automationName', 'autoGrantPermissions', 'appWaitActivity'].includes(
+      !['deviceName', 'platformVersion', 'automationName', 'autoGrantPermissions', 'appWaitActivity', 'noReset', 'fullReset'].includes(
         key,
       )
     ) {

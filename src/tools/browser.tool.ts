@@ -9,10 +9,14 @@ export const startBrowserToolArguments = {
   windowHeight: z.number().min(400).max(2160).optional(),
 };
 
+export const closeSessionToolArguments = {
+  detach: z.boolean().optional().describe('If true, disconnect from session without terminating it (preserves app state). Default: false'),
+};
+
 const state: {
   browsers: Map<string, WebdriverIO.Browser>;
   currentSession: string | null;
-  sessionMetadata: Map<string, { type: 'browser' | 'ios' | 'android'; capabilities: any }>;
+  sessionMetadata: Map<string, { type: 'browser' | 'ios' | 'android'; capabilities: any; isAttached: boolean }>;
 } = {
   browsers: new Map<string, WebdriverIO.Browser>(),
   currentSession: null,
@@ -69,6 +73,7 @@ export const startBrowserTool: ToolCallback = async ({headless = false, windowWi
   state.sessionMetadata.set(sessionId, {
     type: 'browser',
     capabilities: browser.capabilities,
+    isAttached: false,
   });
 
   const modeText = headless ? 'headless' : 'headed';
@@ -80,16 +85,29 @@ export const startBrowserTool: ToolCallback = async ({headless = false, windowWi
   };
 };
 
-export const closeSessionTool: ToolCallback = async (): Promise<CallToolResult> => {
+export const closeSessionTool: ToolCallback = async (args: { detach?: boolean } = {}): Promise<CallToolResult> => {
   try {
     const browser = getBrowser();
-    await browser.deleteSession();
     const sessionId = state.currentSession;
-    state.browsers.delete(state.currentSession);
-    state.sessionMetadata.delete(state.currentSession);
+    const metadata = state.sessionMetadata.get(sessionId);
+
+    // Only delete session if not detaching
+    if (!args.detach) {
+      await browser.deleteSession();
+    }
+
+    // Always clean up local state
+    state.browsers.delete(sessionId);
+    state.sessionMetadata.delete(sessionId);
     state.currentSession = null;
+
+    const action = args.detach ? 'detached from' : 'closed';
+    const note = args.detach && !metadata?.isAttached
+      ? '\nNote: Session will remain active on Appium server.'
+      : '';
+
     return {
-      content: [{type: 'text', text: `Session ${sessionId} closed`}],
+      content: [{type: 'text', text: `Session ${sessionId} ${action}${note}`}],
     };
   } catch (e) {
     return {
