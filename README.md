@@ -1,5 +1,12 @@
 # WebDriverIO MCP Server
 
+⚠️ Project Archived
+
+This project is no longer under active development.
+The official WebDriverIO MCP server is now available as [@wdio/mcp](https://www.npmjs.com/package/@wdio/mcp), which was built using this project as its foundation.
+
+👉 Use the official package instead: https://github.com/webdriverio/mcp
+
 A Model Context Protocol (MCP) server that enables Claude Desktop to interact with web browsers and mobile applications using WebDriverIO. Automate Chrome browsers, iOS apps, and Android apps—all through a unified interface.
 
 ## Features
